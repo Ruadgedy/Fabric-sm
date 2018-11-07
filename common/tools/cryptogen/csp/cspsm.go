@@ -1,4 +1,4 @@
-// +build IGNORE
+// +build !IGNORE
 
 /*
 Copyright IBM Corp. All Rights Reserved.
@@ -9,18 +9,17 @@ package csp
 
 import (
 	"crypto"
-	"crypto/ecdsa"
-	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/flyinox/crypto/x509"
+
 	"github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/bccsp/signer"
-	"github.com/pkg/errors"
 )
 
 // LoadPrivateKey loads a private key from file in keystorePath
@@ -54,9 +53,6 @@ func LoadPrivateKey(keystorePath string) (bccsp.Key, crypto.Signer, error) {
 			}
 
 			block, _ := pem.Decode(rawKey)
-			if block == nil {
-				return errors.Errorf("%s: wrong PEM encoding", path)
-			}
 			priv, err = csp.KeyImport(block.Bytes, &bccsp.ECDSAPrivateKeyImportOpts{Temporary: true})
 			if err != nil {
 				return err
@@ -81,37 +77,73 @@ func LoadPrivateKey(keystorePath string) (bccsp.Key, crypto.Signer, error) {
 }
 
 // GeneratePrivateKey creates a private key and stores it in keystorePath
-func GeneratePrivateKey(keystorePath string) (bccsp.Key,
-	crypto.Signer, error) {
+func GeneratePrivateKey(keystorePath, sigAlgo, pluginPath string) (bccsp.Key, crypto.Signer, error) {
 
-	var err error
 	var priv bccsp.Key
 	var s crypto.Signer
 
-	opts := &factory.FactoryOpts{
-		ProviderName: "SW",
-		SwOpts: &factory.SwOpts{
-			HashFamily: "SHA2",
-			SecLevel:   256,
+	switch sigAlgo {
+	case "ecdsa":
+		opts := &factory.FactoryOpts{
+			ProviderName: "SW",
+			SwOpts: &factory.SwOpts{
+				HashFamily: "SHA2",
+				SecLevel:   256,
 
-			FileKeystore: &factory.FileKeystoreOpts{
-				KeyStorePath: keystorePath,
+				FileKeystore: &factory.FileKeystoreOpts{
+					KeyStorePath: keystorePath,
+				},
 			},
-		},
-	}
-	csp, err := factory.GetBCCSPFromOpts(opts)
-	if err == nil {
-		// generate a key
-		priv, err = csp.KeyGen(&bccsp.ECDSAP256KeyGenOpts{Temporary: false})
-		if err == nil {
-			// create a crypto.Signer
-			s, err = signer.New(csp, priv)
 		}
+		csp, err := factory.GetBCCSPFromOpts(opts)
+		if err == nil {
+			// generate a key
+			priv, err = csp.KeyGen(&bccsp.ECDSAP256KeyGenOpts{Temporary: false})
+			if err == nil {
+				// create a crypto.Signer
+				s, err = signer.New(csp, priv)
+			}
+		}
+		return priv, s, err
+	case "sm2":
+		var opts *factory.FactoryOpts
+		if pluginPath != "" {
+			opts = &factory.FactoryOpts{
+				ProviderName: "PLUGIN",
+				PluginOpts: &factory.PluginOpts{
+					Library: pluginPath,
+					Config:  map[string]interface{}{"keyStore": keystorePath},
+				},
+			}
+		} else { // set to default SW (which fitted for sm) when pluginPath is not set
+			opts = &factory.FactoryOpts{
+				ProviderName: "SW",
+				SwOpts: &factory.SwOpts{
+					HashFamily: "SHA2",
+					SecLevel:   256,
+
+					FileKeystore: &factory.FileKeystoreOpts{
+						KeyStorePath: keystorePath,
+					},
+				},
+			}
+		}
+		csp, err := factory.GetBCCSPFromOpts(opts)
+		if err == nil {
+			// generate a key
+			priv, err = csp.KeyGen(&bccsp.SM2KeyGenOpts{Temporary: false})
+			if err == nil {
+				// create a crypto.Signer
+				s, err = signer.New(csp, priv)
+			}
+		}
+		return priv, s, err
 	}
-	return priv, s, err
+	return priv, s, nil
+
 }
 
-func GetECPublicKey(priv bccsp.Key) (*ecdsa.PublicKey, error) {
+func GetECPublicKey(priv bccsp.Key) (interface{}, error) {
 
 	// get the public key
 	pubKey, err := priv.PublicKey()
@@ -128,5 +160,5 @@ func GetECPublicKey(priv bccsp.Key) (*ecdsa.PublicKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ecPubKey.(*ecdsa.PublicKey), nil
+	return ecPubKey, nil
 }

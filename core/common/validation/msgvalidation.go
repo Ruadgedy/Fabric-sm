@@ -111,7 +111,7 @@ func ValidateProposalMessage(signedProp *pb.SignedProposal) (*pb.Proposal, *comm
 			err = errors.Wrap(err, "could not deserialize a SerializedIdentity")
 			putilsLogger.Warningf("channel [%s]: %s", chdr.ChannelId, err)
 		}
-		return nil, nil, nil, errors.Errorf("access denied: channel [%s] creator org [%s]", chdr.ChannelId, sId.Mspid)
+		return nil, nil, nil, errors.Errorf("access denied: channel [%s] creator org [%s], err:%s", chdr.ChannelId, sId.Mspid, err.Error())
 	}
 
 	// Verify that the transaction ID has been computed properly.

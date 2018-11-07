@@ -9,11 +9,12 @@ package msp
 import (
 	"crypto"
 	"crypto/rand"
-	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"time"
+
+	"github.com/flyinox/crypto/x509"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/bccsp"
@@ -68,6 +69,7 @@ func newIdentity(cert *x509.Certificate, pk bccsp.Key, msp *bccspmsp) (Identity,
 		Id:    hex.EncodeToString(digest)}
 
 	return &identity{id: id, cert: cert, pk: pk, msp: msp}, nil
+
 }
 
 // ExpiresAt returns the time at which the Identity expires.
@@ -157,7 +159,17 @@ func (id *identity) Verify(msg []byte, sig []byte) error {
 	// mspIdentityLogger.Infof("Verifying signature")
 
 	// Compute Hash
-	hashOpt, err := id.getHashOpt(id.msp.cryptoConfig.SignatureHashFamily)
+	//hashOpt, err := id.getHashOpt(id.msp.cryptoConfig.SignatureHashFamily)
+	var hashFamily string
+	switch id.cert.PublicKeyAlgorithm {
+	case x509.ECDSA:
+		hashFamily = id.msp.cryptoConfig.SignatureHashFamily
+	case x509.SM2://We here verify the msg instead of the digest of msg
+		hashFamily = bccsp.SM3SIG
+	default:
+		hashFamily = id.msp.cryptoConfig.SignatureHashFamily
+	}
+	hashOpt, err := id.getHashOpt(hashFamily)
 	if err != nil {
 		return errors.WithMessage(err, "failed getting hash function options")
 	}
@@ -208,6 +220,10 @@ func (id *identity) getHashOpt(hashFamily string) (bccsp.HashOpts, error) {
 		return bccsp.GetHashOpt(bccsp.SHA256)
 	case bccsp.SHA3:
 		return bccsp.GetHashOpt(bccsp.SHA3_256)
+	case bccsp.SM3:
+		return &bccsp.SM3Opts{}, nil
+	case bccsp.SM3SIG:
+		return &bccsp.SM3SIGOpts{}, nil
 	}
 	return nil, errors.Errorf("hash familiy not recognized [%s]", hashFamily)
 }
@@ -234,7 +250,17 @@ func (id *signingidentity) Sign(msg []byte) ([]byte, error) {
 	//mspIdentityLogger.Infof("Signing message")
 
 	// Compute Hash
-	hashOpt, err := id.getHashOpt(id.msp.cryptoConfig.SignatureHashFamily)
+	//hashOpt, err := id.getHashOpt(id.msp.cryptoConfig.SignatureHashFamily)
+	var hashFamily string
+	switch id.cert.PublicKeyAlgorithm {
+	case x509.ECDSA:
+		hashFamily = id.msp.cryptoConfig.SignatureHashFamily
+	case x509.SM2://We here Sign the msg instead of the digest of msg
+		hashFamily = bccsp.SM3SIG
+	default:
+		hashFamily = id.msp.cryptoConfig.SignatureHashFamily
+	}
+	hashOpt, err := id.getHashOpt(hashFamily)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed getting hash function options")
 	}
