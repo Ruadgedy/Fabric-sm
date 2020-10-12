@@ -55,6 +55,7 @@ func TestRSAOpts(t *testing.T) {
 			&RSA4096KeyGenOpts{ephemeral},
 		} {
 			expectedAlgorithm := reflect.TypeOf(opts).String()[7:14]
+			//fmt.Println(reflect.TypeOf(opts).String()[7:14])
 			assert.Equal(t, expectedAlgorithm, opts.Algorithm())
 			assert.Equal(t, ephemeral, opts.Ephemeral())
 		}
@@ -101,6 +102,7 @@ func TestECDSAOpts(t *testing.T) {
 
 func TestHashOpts(t *testing.T) {
 	for _, ho := range []HashOpts{&SHA256Opts{}, &SHA384Opts{}, &SHA3_256Opts{}, &SHA3_384Opts{}} {
+		//fmt.Println(ho.Algorithm())
 		s := strings.Replace(reflect.TypeOf(ho).String(), "*bccsp.", "", -1)
 		algorithm := strings.Replace(s, "Opts", "", -1)
 		assert.Equal(t, algorithm, ho.Algorithm())

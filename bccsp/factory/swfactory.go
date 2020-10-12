@@ -47,12 +47,14 @@ func (f *SWFactory) Get(config *FactoryOpts) (bccsp.BCCSP, error) {
 	if swOpts.Ephemeral == true {
 		ks = sw.NewDummyKeyStore()
 	} else if swOpts.FileKeystore != nil {
+		// 将密钥存储在文件系统中
 		fks, err := sw.NewFileBasedKeyStore(nil, swOpts.FileKeystore.KeyStorePath, false)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to initialize software key store")
 		}
 		ks = fks
 	} else if swOpts.InmemKeystore != nil {
+		// 将密钥存储在内存中
 		ks = sw.NewInMemoryKeyStore()
 	} else {
 		// Default to ephemeral key store

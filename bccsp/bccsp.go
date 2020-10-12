@@ -33,25 +33,30 @@ type Key interface {
 
 	// Symmetric returns true if this key is a symmetric key,
 	// false is this key is asymmetric
+	// 检验密钥是否是对称密钥
 	Symmetric() bool
 
 	// Private returns true if this key is a private key,
 	// false otherwise.
+	// 检验密钥是否是私钥
 	Private() bool
 
 	// PublicKey returns the corresponding public key part of an asymmetric public/private key pair.
 	// This method returns an error in symmetric key schemes.
+	// 返回非对称体系中的公钥部分
 	PublicKey() (Key, error)
 }
 
 // KeyGenOpts contains options for key-generation with a CSP.
-type KeyGenOpts interface {
+type KeyGenOpts interface {  // 密钥生成选项
 
 	// Algorithm returns the key generation algorithm identifier (to be used).
+	// 返回密钥算法标识符
 	Algorithm() string
 
 	// Ephemeral returns true if the key to generate has to be ephemeral,
 	// false otherwise.
+	// 短暂的（临时的）密钥返回true
 	Ephemeral() bool
 }
 
@@ -99,25 +104,30 @@ type DecrypterOpts interface{}
 // the implementation of cryptographic standards and algorithms.
 type BCCSP interface {
 
-	// KeyGen generates a key using opts.
+	// KeyGen generates a key using opts.(密钥生成)
 	KeyGen(opts KeyGenOpts) (k Key, err error)
 
+	// 密钥派生
 	// KeyDeriv derives a key from k using opts.
 	// The opts argument should be appropriate for the primitive used.
 	KeyDeriv(k Key, opts KeyDerivOpts) (dk Key, err error)
 
+	// 密钥导入
 	// KeyImport imports a key from its raw representation using opts.
 	// The opts argument should be appropriate for the primitive used.
 	KeyImport(raw interface{}, opts KeyImportOpts) (k Key, err error)
 
+	// 获取密钥
 	// GetKey returns the key this CSP associates to
 	// the Subject Key Identifier ski.
 	GetKey(ski []byte) (k Key, err error)
 
+	// hash（msg）
 	// Hash hashes messages msg using options opts.
 	// If opts is nil, the default hash function will be used.
 	Hash(msg []byte, opts HashOpts) (hash []byte, err error)
 
+	// 获取哈希
 	// GetHash returns and instance of hash.Hash using options opts.
 	// If opts is nil, the default hash function will be returned.
 	GetHash(opts HashOpts) (h hash.Hash, err error)

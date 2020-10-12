@@ -32,7 +32,7 @@ import (
 
 // TestCBCPKCS7EncryptCBCPKCS7Decrypt encrypts using CBCPKCS7Encrypt and decrypts using CBCPKCS7Decrypt.
 func TestCBCPKCS7EncryptCBCPKCS7Decrypt(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()
 
 	// Note: The purpose of this test is not to test AES-256 in CBC mode's strength
 	// ... but rather to verify the code wrapping/unwrapping the cipher.
@@ -43,11 +43,13 @@ func TestCBCPKCS7EncryptCBCPKCS7Decrypt(t *testing.T) {
 	var ptext = []byte("a message with arbitrary length (42 bytes)")
 
 	encrypted, encErr := AESCBCPKCS7Encrypt(key, ptext)
+	t.Log("加密后的消息是:",encrypted)
 	if encErr != nil {
 		t.Fatalf("Error encrypting '%s': %s", ptext, encErr)
 	}
 
 	decrypted, dErr := AESCBCPKCS7Decrypt(key, encrypted)
+	t.Log("解密后的消息是：",string(decrypted))
 	if dErr != nil {
 		t.Fatalf("Error decrypting the encrypted '%s': %v", ptext, dErr)
 	}
@@ -68,6 +70,7 @@ func TestPKCS7Padding(t *testing.T) {
 		16, 16, 16, 16,
 		16, 16, 16, 16}
 	result := pkcs7Padding(ptext)
+	t.Log("result:",result)
 
 	if !bytes.Equal(expected, result) {
 		t.Fatal("Padding error! Expected: ", expected, "', received: '", result, "'")
@@ -80,6 +83,7 @@ func TestPKCS7Padding(t *testing.T) {
 		15, 15, 15, 15,
 		15, 15, 15, 15}
 	result = pkcs7Padding(ptext)
+	t.Log("result:",result)
 
 	if !bytes.Equal(expected, result) {
 		t.Fatal("Padding error! Expected: '", expected, "', received: '", result, "'")
@@ -92,6 +96,7 @@ func TestPKCS7Padding(t *testing.T) {
 		14, 14, 14, 14,
 		14, 14, 14, 14}
 	result = pkcs7Padding(ptext)
+	t.Log("result:",result)
 
 	if !bytes.Equal(expected, result) {
 		t.Fatal("Padding error! Expected: '", expected, "', received: '", result, "'")
@@ -284,6 +289,7 @@ func TestCBCPKCS7Encrypt_EmptyPlaintext(t *testing.T) {
 }
 
 // TestCBCEncrypt_EmptyPlaintext encrypts an empty message. Verifying as well that the ciphertext length is as expected.
+// 测试明文为空的情况
 func TestCBCEncrypt_EmptyPlaintext(t *testing.T) {
 	t.Parallel()
 
@@ -305,7 +311,13 @@ func TestCBCEncrypt_EmptyPlaintext(t *testing.T) {
 	if len(ciphertext) != expectedLength {
 		t.Fatalf("Wrong ciphertext length. Expected: '%d', received: '%d'", expectedLength, len(ciphertext))
 	}
-	t.Log("Ciphertext: ", ciphertext)
+	t.Log("Ciphertext: ", string(ciphertext))
+
+	decrypt, encErr := aesCBCDecrypt(key, ciphertext)
+	if encErr != nil {
+		t.Fatalf("解密时出现错误")
+	}
+	t.Log("解密后的内容：", decrypt)
 }
 
 // TestCBCPKCS7Encrypt_VerifyRandomIVs encrypts twice with same key. The first 16 bytes should be different if IV is generated randomly.
@@ -328,6 +340,8 @@ func TestCBCPKCS7Encrypt_VerifyRandomIVs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error encrypting '%s': %s", ptext, err)
 	}
+
+	//assert.Equal(t, ciphertext1, ciphertext2)
 
 	iv1 := ciphertext1[:aes.BlockSize]
 	iv2 := ciphertext2[:aes.BlockSize]
@@ -389,6 +403,7 @@ func TestCBCEncryptCBCDecrypt_KeyMismatch(t *testing.T) {
 	if decErr != nil {
 		t.Fatalf("Error decrypting '%s': %v", ptext, decErr)
 	}
+	t.Log("使用错误密钥解密后的数据是：",string(decrypted))
 
 	if string(ptext[:]) == string(decrypted[:]) {
 		t.Fatal("Decrypting a ciphertext with a different key than the one used for encrypting it - should not result in the original plaintext.")

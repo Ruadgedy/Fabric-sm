@@ -31,6 +31,7 @@ var ErrLedgerAlreadyOpened = errors.New("ledger already opened")
 // ErrLedgerMgmtNotInitialized is thrown when ledger mgmt is used before initializing this
 var ErrLedgerMgmtNotInitialized = errors.New("ledger mgmt should be initialized before using")
 
+// 打开的账本，key为通道名称 value为账本
 var openedLedgers map[string]ledger.PeerLedger
 var ledgerProvider ledger.PeerLedgerProvider
 var lock sync.Mutex

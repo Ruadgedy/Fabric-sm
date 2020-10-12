@@ -83,7 +83,7 @@ func GeneratePrivateKey(keystorePath, sigAlgo, pluginPath string) (bccsp.Key, cr
 	var s crypto.Signer
 
 	switch sigAlgo {
-	case "ecdsa":
+	case "ecdsa": // 自带的椭圆曲线算法
 		opts := &factory.FactoryOpts{
 			ProviderName: "SW",
 			SwOpts: &factory.SwOpts{
@@ -105,7 +105,7 @@ func GeneratePrivateKey(keystorePath, sigAlgo, pluginPath string) (bccsp.Key, cr
 			}
 		}
 		return priv, s, err
-	case "sm2":
+	case "sm2": // 新增的sm2算法
 		var opts *factory.FactoryOpts
 		if pluginPath != "" {
 			opts = &factory.FactoryOpts{
@@ -143,6 +143,7 @@ func GeneratePrivateKey(keystorePath, sigAlgo, pluginPath string) (bccsp.Key, cr
 
 }
 
+// 通过私钥获取公钥
 func GetECPublicKey(priv bccsp.Key) (interface{}, error) {
 
 	// get the public key

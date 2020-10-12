@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/hyperledger/fabric/bccsp/utils"
@@ -243,3 +244,87 @@ func LoadCertificateECDSA(certPath string) (*x509.Certificate, error) {
 
 	return cert, err
 }
+
+type ListNode struct {
+	Val int
+	Next *ListNode
+}
+
+func hasCycle(head *ListNode) bool {
+	slow, fast := head, head
+	for fast != nil && fast.Next != nil{
+		slow = slow.Next
+		fast = fast.Next
+		if slow == fast {
+			return true
+		}
+	}
+	return false
+}
+
+func TestTmp(t *testing.T)  {
+}
+
+func rob(nums []int) int {
+	l := len(nums)
+	if l == 1 {
+		return nums[0]
+	}
+	return max(robSum(nums[:l - 1]), robSum(nums[1:]))
+}
+
+func robSum(nums []int) int{
+	length := len(nums)
+	if length == 0{
+		return 0
+	}
+	if length == 1 {
+		return nums[0]
+	}
+	if length {
+
+	}
+	dp := make([]int, length)
+	dp[0] = nums[0]
+	dp[1] = max(nums[0], nums[1])
+	for i := 2;i < length; i++ {
+		dp[i] = max(dp[i-2] + nums[i], dp[i-1])
+	}
+	return dp[length-1]
+}
+
+func max(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
+}
+
+type TreeNode struct {
+	Val int
+	Left *TreeNode
+	Right *TreeNode
+}
+
+func rob(root *TreeNode) int{
+	res := robTree(root)
+	return max(res[0], res[1])
+}
+
+func robTree(root *TreeNode) []int {
+	// arr[0] 表示不抢root得到的钱数
+	// arr[1] 表示抢root得到的钱数
+	if root == nil {
+		return []int{0,0}
+	}
+	left := robTree(root.Left)
+	right := robTree(root.Right)
+	// 抢
+	rob := root.Val + left[0] + right[0]
+	// 不抢
+	not_rob := max(left[0], left[1]) + max(right[0], right[1])
+	return []int{not_rob, rob}
+}
+
+
+

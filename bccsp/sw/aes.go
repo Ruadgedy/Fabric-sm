@@ -29,6 +29,7 @@ import (
 )
 
 // GetRandomBytes returns len random looking bytes
+// 返回长度是len的字节数组，其内容被byte随机填充
 func GetRandomBytes(len int) ([]byte, error) {
 	if len < 0 {
 		return nil, errors.New("Len must be larger than 0")
@@ -47,12 +48,14 @@ func GetRandomBytes(len int) ([]byte, error) {
 	return buffer, nil
 }
 
+// AES使用固定的128bit 大小的块，也就是16B  const BlockSize int = 16
 func pkcs7Padding(src []byte) []byte {
-	padding := aes.BlockSize - len(src)%aes.BlockSize
+	padding := aes.BlockSize - len(src)%aes.BlockSize  // 计算需要填充的字节大小
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(src, padtext...)
 }
 
+// 拿到去除填充的原始数据
 func pkcs7UnPadding(src []byte) ([]byte, error) {
 	length := len(src)
 	unpadding := int(src[length-1])
@@ -61,8 +64,9 @@ func pkcs7UnPadding(src []byte) ([]byte, error) {
 		return nil, errors.New("Invalid pkcs7 padding (unpadding > aes.BlockSize || unpadding == 0)")
 	}
 
-	pad := src[len(src)-unpadding:]
+	pad := src[len(src)-unpadding:] // 拿到填充部分的切片
 	for i := 0; i < unpadding; i++ {
+		// 填充部分的内容应该都是一样的，都是填充的字节长度。如果发现填充部分中有哪一字节与其他的不相等，则出现了错误
 		if pad[i] != byte(unpadding) {
 			return nil, errors.New("Invalid pkcs7 padding (pad[i] != unpadding)")
 		}
