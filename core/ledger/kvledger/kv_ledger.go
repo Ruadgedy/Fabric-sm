@@ -38,13 +38,13 @@ var logger = flogging.MustGetLogger("kvledger")
 // KVLedger provides an implementation of `ledger.PeerLedger`.
 // This implementation provides a key-value based data model
 type kvLedger struct {
-	ledgerID               string
-	blockStore             *ledgerstorage.Store
-	txtmgmt                txmgr.TxMgr
-	historyDB              historydb.HistoryDB
-	configHistoryRetriever ledger.ConfigHistoryRetriever
-	blockAPIsRWLock        *sync.RWMutex
-	stats                  *ledgerStats
+	ledgerID               string   // 账本ID
+	blockStore             *ledgerstorage.Store  // 区块存储
+	txtmgmt                txmgr.TxMgr	// 交易管理者
+	historyDB              historydb.HistoryDB	// 历史数据库
+	configHistoryRetriever ledger.ConfigHistoryRetriever	// 配置历史检索器
+	blockAPIsRWLock        *sync.RWMutex	// 读写锁
+	stats                  *ledgerStats	// 账本状态
 	commitHash             []byte
 }
 

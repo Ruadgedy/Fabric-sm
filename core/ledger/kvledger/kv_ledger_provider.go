@@ -40,15 +40,34 @@ var (
 
 // Provider implements interface ledger.PeerLedgerProvider
 type Provider struct {
+	// id存储
+	// idStore的作用有两个：1. 存储已建立的账本的LedgerID和对应的创世区块
+	//					   2. 保存在建标志，用于标记账本是否建立成功
 	idStore             *idStore
+	// 账本存储提供者
+	// ledgerStoreProvider 存储所有的账本数据，分为三类：
+	//		1.实际的交易数据，Block数据，以blockfile文件的方式存储
+	//		2.Block的存储状态信息，如Block在文件中的位置，长度信息、文件大小等索引信息，索引信息存在放在indexdb数据库中
+	//		3. 私有数据，存放在pvdatastorage数据库中
 	ledgerStoreProvider *ledgerstorage.Provider
+	// 版本数据库提供者
+	// 世界状态，即交易的最终状态。这类信息被保存在VersionDB数据库
 	vdbProvider         privacyenabledstate.DBProvider
+	// 历史数据库提供者
+	// historydbProvider提供historydb数据库，该数据库存储交易的历史数据明细
 	historydbProvider   historydb.HistoryDBProvider
+	// 配置历史管理者
 	configHistoryMgr    confighistory.Mgr
+	// 状态监听器
 	stateListeners      []ledger.StateListener
+	// 记账提供者
+	// 私有数据除了本身数据外，还有部分数据称为私有数据生成策略，包括区块生存时间和有效期编号，这类数据保存在bookeeperdb中
 	bookkeepingProvider bookkeeping.Provider
+	// 初始化
 	initializer         *ledger.Initializer
+	// 监听chaincode事件并确定peer是否符合一个或多个现有私有数据集合的条件，并通知注册的监听器
 	collElgNotifier     *collElgNotifier
+	// 度量状态
 	stats               *stats
 	fileLock            *leveldbhelper.FileLock
 }
@@ -264,6 +283,7 @@ func panicOnErr(err error, mgsFormat string, args ...interface{}) {
 
 //////////////////////////////////////////////////////////////////////
 // Ledger id persistence related code
+// idStore 的作用有两个
 ///////////////////////////////////////////////////////////////////////
 type idStore struct {
 	db *leveldbhelper.DB

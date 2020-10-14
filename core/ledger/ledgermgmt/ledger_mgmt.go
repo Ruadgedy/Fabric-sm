@@ -50,6 +50,7 @@ type Initializer struct {
 
 // Initialize initializes ledgermgmt
 func Initialize(initializer *Initializer) {
+	// 全局只执行一次
 	once.Do(func() {
 		initialize(initializer)
 	})
