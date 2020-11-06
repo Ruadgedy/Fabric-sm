@@ -1,5 +1,5 @@
 
-# Hyperledger Fabric [![join the chat][rocketchat-image]][rocketchat-url]
+# Hyperledger Fabric [![join the chat][rocketchat-image]][rocketchat-url]  使用的时候，拉取完成后要将目录改名为fabric
 
 [rocketchat-url]: https://chat.hyperledger.org/channel/fabric
 [rocketchat-image]: https://open.rocket.chat/images/join-chat.svg
